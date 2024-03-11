@@ -1,7 +1,18 @@
 -- algae
 
+musicutil = require("musicutil")
+util = require("util")
+
 function init()
-  print("loaded algae")
+  for i = 1, 2 do
+    crow.input[i].mode("change")
+    crow.input[i].change = function(state)
+      if state then
+        crow.ii.kria.get("cv", i - 1)
+      end
+    end
+  end
+
   clock.run(function()
     while true do
       get_txi_params()
@@ -41,7 +52,7 @@ function redraw()
 
   for i = 1, 4 do
     screen.move(55, 20 + i * 10)
-    screen.text("txi param " .. i .. ": " .. txi.params[i])
+    screen.text("txi param " .. i .. ": " .. util.round(txi.params[i]))
   end
 
   screen.update()
@@ -66,5 +77,15 @@ end
 function get_txi_params()
   for i = 1, 4 do
     crow.ii.txi.get("param", i)
+  end
+end
+
+----- KRIA -----
+
+crow.ii.kria.event = function(event, value)
+  if event.name == "cv" then
+    print("kria cv:")
+    note_value = util.round(value / (1 / 12))
+    print(event.arg + 1, note_value)
   end
 end
