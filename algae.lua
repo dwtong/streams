@@ -4,6 +4,11 @@ musicutil = require("musicutil")
 util = require("util")
 
 function init()
+  crow.ii.jf.mode(1)
+  for i = 1, 4 do
+    crow.output[i].volts = 0
+  end
+
   for i = 1, 2 do
     crow.input[i].mode("change")
     crow.input[i].change = function(state)
@@ -82,10 +87,23 @@ end
 
 ----- KRIA -----
 
+-- major pentatonic
+scale = { 0, 2, 4, 7, 9 }
+
 crow.ii.kria.event = function(event, value)
   if event.name == "cv" then
-    print("kria cv:")
-    note_value = util.round(value / (1 / 12))
-    print(event.arg + 1, note_value)
+    kria_channel = event.arg + 1
+    kria_note = util.round(value / (1 / 12))
+    note = scale[kria_note % #scale + 1]
+
+    if kria_channel == 1 then
+      play_note(note / 12, 1)
+    end
   end
+end
+
+----- JF -----
+
+function play_note(pitch, level)
+  crow.ii.jf.play_note(pitch, level)
 end
