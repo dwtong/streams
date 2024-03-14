@@ -1,30 +1,44 @@
 -- algae
 
-musicutil = require("musicutil")
 util = require("util")
 
+jf = include("lib/jf")
+kria = include("lib/kria")
+txi = include("lib/txi")
+
+-- major pentatonic
+scale = { 0, 2, 4, 7, 9 }
+
 function init()
-  crow.ii.jf.mode(1)
+  print("init algae")
+  jf.init()
+  kria.init()
+  -- txi.init()
+
   for i = 1, 4 do
-    crow.output[i].volts = 0
+    kria.cv_event_handlers[i] = function(note)
+      print(string.format("kria cv event. channel: %i, note: %i", i, note))
+      quantised_note = scale[note % #scale + 1]
+      jf.play_note(quantised_note / 12, 1, i)
+    end
   end
 
   for i = 1, 2 do
     crow.input[i].mode("change")
-    crow.input[i].change = function(state)
-      if state then
-        crow.ii.kria.get("cv", i - 1)
+    crow.input[i].change = function(in_high)
+      if in_high then
+        kria.get_cv(i)
       end
     end
   end
 
-  clock.run(function()
-    while true do
-      get_txi_params()
-      redraw()
-      clock.sleep(0.1)
-    end
-  end)
+  -- clock.run(function()
+  --   while true do
+  --     txi.get_params()
+  --     redraw()
+  --     clock.sleep(0.1)
+  --   end
+  -- end)
 end
 
 function key(n, z)
@@ -55,55 +69,10 @@ function redraw()
   screen.move(5, 50)
   screen.text("k3: reload")
 
-  for i = 1, 4 do
-    screen.move(55, 20 + i * 10)
-    screen.text("txi param " .. i .. ": " .. util.round(txi.params[i]))
-  end
+  -- for i = 1, 4 do
+  --   screen.move(55, 20 + i * 10)
+  --   screen.text("txi param " .. i .. ": " .. util.round(txi.params[i]))
+  -- end
 
   screen.update()
-end
-
------ TXI -----
-
-txi = {
-  params = {},
-}
-
-crow.ii.txi.event = function(event, value)
-  if event.name == "param" then
-    txi.params[event.arg] = value
-  end
-end
-
-for i = 1, 4 do
-  txi.params[i] = 0
-end
-
-function get_txi_params()
-  for i = 1, 4 do
-    crow.ii.txi.get("param", i)
-  end
-end
-
------ KRIA -----
-
--- major pentatonic
-scale = { 0, 2, 4, 7, 9 }
-
-crow.ii.kria.event = function(event, value)
-  if event.name == "cv" then
-    kria_channel = event.arg + 1
-    kria_note = util.round(value / (1 / 12))
-    note = scale[kria_note % #scale + 1]
-
-    if kria_channel == 1 then
-      play_note(note / 12, 1)
-    end
-  end
-end
-
------ JF -----
-
-function play_note(pitch, level)
-  crow.ii.jf.play_note(pitch, level)
 end
