@@ -70,7 +70,16 @@ function redraw()
   screen.move(5, 50)
   screen.text("k3: reload")
 
+  screen.move(55, 10)
+  screen.text("kria: ")
   for i = 1, 4 do
+    screen.move(69 + i * 10, 10)
+    cv_value = kria.cv_values[i]
+    if cv_value then
+      screen.text(cv_value)
+    end
+  end
+
   for i = 1, 4 do
     screen.move(55, 20 + i * 10)
     screen.text("txi param " .. i .. ": " .. util.round(txi.params[i]))

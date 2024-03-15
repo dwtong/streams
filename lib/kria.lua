@@ -1,15 +1,14 @@
 local Kria = {}
 
--- util = require("util")
+Kria.cv_event_handlers = {}
+Kria.cv_values = {}
 
-cv_event_handlers = {}
-Kria.cv_event_handlers = cv_event_handlers
-
-function crow_event_handler(event, value)
+local function crow_event_handler(event, value)
   if event.name == "cv" then
     channel = event.arg + 1
     note = util.round(value / (1 / 12))
-    cv_event_handlers[channel](note)
+    Kria.cv_event_handlers[channel](note)
+    Kria.cv_values[channel] = note
   end
 end
 
