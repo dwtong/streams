@@ -18,12 +18,12 @@ function init()
 
   for i = 1, 4 do
     kria.cv_event_handlers[i] = function(value)
-      offset = math.floor(txi.get_param(1))
-      octave_volt = math.floor(value)
+      offset = util.round(txi.get_param(1))
+      octave_volt = util.round(value)
       note = volt_to_note(value)
       note = note % 12 + offset
       quantised_note = scale[note % #scale + 1]
-      volt = note_to_volt(quantised_note) + octave_volt + math.floor(note / #scale)
+      volt = note_to_volt(quantised_note) + octave_volt + util.round(note / #scale)
       jf.play_note(volt, 1, i)
     end
   end
@@ -40,9 +40,8 @@ function init()
 
   clock.run(function()
     while true do
-      txi.get_params()
-      -- redraw()
-      clock.sleep(0.1)
+      redraw()
+      clock.sleep(1 / 30)
     end
   end)
 end
@@ -85,9 +84,10 @@ function redraw()
     end
   end
 
-  for i = 1, 4 do
+  local params = txi.get_params()
+  for i = 1, #params do
     screen.move(55, 20 + i * 10)
-    screen.text("txi param " .. i .. ": " .. util.round(txi.params[i]))
+    screen.text("txi param " .. i .. ": " .. util.round(params[i]))
   end
 
   screen.update()
