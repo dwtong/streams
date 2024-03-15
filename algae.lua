@@ -10,6 +10,9 @@ txi = include("lib/txi")
 scale = { 0, 2, 4, 7, 9 }
 
 function quantise(cv_value, note_offset)
+  if note_offset == nil then
+    note_offset = 0
+  end
   octave_volts = util.round(cv_value)
   note = volts_to_note(cv_value)
   note = note % 12 + note_offset
@@ -24,17 +27,28 @@ function init()
   kria.init()
   txi.init()
 
-  kria.cv_event_handlers[1] = function(value)
+  kria.cv.event_handlers[1] = function(value)
     offset = util.round(txi.get_param(1))
     volts = quantise(value, offset)
-    jf.play_note(volts, 4)
+    volts = quantise(value)
+
+    if kria.mute.values[1] == 0 then
+      jf.play_note(volts, 4)
+    end
   end
 
-  kria.cv_event_handlers[2] = function(value)
+  kria.cv.event_handlers[2] = function(value)
     offset = util.round(txi.get_param(2))
     volts = quantise(value, offset)
-    crow.output[1].volts = volts
-    crow.output[2].volts = volts
+    volts = quantise(value)
+
+    if kria.mute.values[2] == 0 then
+      crow.output[1].volts = volts
+    end
+
+    if kria.mute.values[3] == 0 then
+      crow.output[2].volts = volts
+    end
   end
 
   for i = 1, 2 do
@@ -42,6 +56,7 @@ function init()
     crow.input[i].change = function(in_high)
       if in_high then
         kria.get_cv(i)
+        kria.get_mute(i)
         redraw()
       end
     end
@@ -50,7 +65,8 @@ function init()
   clock.run(function()
     while true do
       redraw()
-      clock.sleep(1 / 30)
+      -- TODO: reduced fps until txi ii event refactor
+      clock.sleep(0.5)
     end
   end)
 end
@@ -87,17 +103,17 @@ function redraw()
   screen.text("kria: ")
   for i = 1, 4 do
     screen.move(69 + i * 10, 10)
-    cv_value = kria.cv_values[i]
+    cv_value = kria.cv.values[i]
     if cv_value then
       screen.text(cv_value)
     end
   end
 
-  local params = txi.get_params()
-  for i = 1, #params do
-    screen.move(55, 20 + i * 10)
-    screen.text("txi param " .. i .. ": " .. util.round(params[i]))
-  end
+  -- local params = txi.get_params()
+  -- for i = 1, #params do
+  --   screen.move(55, 20 + i * 10)
+  --   screen.text("txi param " .. i .. ": " .. util.round(params[i]))
+  -- end
 
   screen.update()
 end
