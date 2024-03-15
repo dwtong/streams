@@ -1,18 +1,17 @@
 local Txi = {}
 
-params = {}
-Txi.params = params
+Txi.params = {}
 
-function crow_event_handler(event, value)
+local function crow_event_handler(event, value)
   if event.name == "param" then
-    params[event.arg] = value
+    Txi.params[event.arg] = value
   end
 end
 
 function Txi.init()
   print("init txi")
   for i = 1, 4 do
-    params[i] = 0
+    Txi.params[i] = 0
   end
 
   crow.ii.txi.event = crow_event_handler

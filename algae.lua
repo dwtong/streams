@@ -13,7 +13,7 @@ function init()
   print("init algae")
   jf.init()
   kria.init()
-  -- txi.init()
+  txi.init()
 
   for i = 1, 4 do
     kria.cv_event_handlers[i] = function(note)
@@ -28,17 +28,18 @@ function init()
     crow.input[i].change = function(in_high)
       if in_high then
         kria.get_cv(i)
+        redraw()
       end
     end
   end
 
-  -- clock.run(function()
-  --   while true do
-  --     txi.get_params()
-  --     redraw()
-  --     clock.sleep(0.1)
-  --   end
-  -- end)
+  clock.run(function()
+    while true do
+      txi.get_params()
+      redraw()
+      clock.sleep(0.1)
+    end
+  end)
 end
 
 function key(n, z)
@@ -69,10 +70,11 @@ function redraw()
   screen.move(5, 50)
   screen.text("k3: reload")
 
-  -- for i = 1, 4 do
-  --   screen.move(55, 20 + i * 10)
-  --   screen.text("txi param " .. i .. ": " .. util.round(txi.params[i]))
-  -- end
+  for i = 1, 4 do
+  for i = 1, 4 do
+    screen.move(55, 20 + i * 10)
+    screen.text("txi param " .. i .. ": " .. util.round(txi.params[i]))
+  end
 
   screen.update()
 end
