@@ -8,6 +8,7 @@ txi = include("lib/txi")
 
 -- major pentatonic
 scale = { 0, 2, 4, 7, 9 }
+offset = 0
 
 function init()
   print("init algae")
@@ -16,10 +17,14 @@ function init()
   txi.init()
 
   for i = 1, 4 do
-    kria.cv_event_handlers[i] = function(note)
-      print(string.format("kria cv event. channel: %i, note: %i", i, note))
+    kria.cv_event_handlers[i] = function(value)
+      offset = math.floor(txi.get_param(1))
+      octave_volt = math.floor(value)
+      note = volt_to_note(value)
+      note = note % 12 + offset
       quantised_note = scale[note % #scale + 1]
-      jf.play_note(quantised_note / 12, 1, i)
+      volt = note_to_volt(quantised_note) + octave_volt + math.floor(note / #scale)
+      jf.play_note(volt, 1, i)
     end
   end
 
@@ -36,7 +41,7 @@ function init()
   clock.run(function()
     while true do
       txi.get_params()
-      redraw()
+      -- redraw()
       clock.sleep(0.1)
     end
   end)
@@ -86,4 +91,12 @@ function redraw()
   end
 
   screen.update()
+end
+
+function volt_to_note(volt)
+  return util.round(volt / (1 / 12))
+end
+
+function note_to_volt(note)
+  return note * (1 / 12)
 end

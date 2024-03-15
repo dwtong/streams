@@ -23,4 +23,9 @@ function Txi.get_params()
   end
 end
 
+function Txi.get_param(channel)
+  crow.ii.txi.get("param", channel)
+  return Txi.params[channel]
+end
+
 return Txi

@@ -6,9 +6,8 @@ Kria.cv_values = {}
 local function crow_event_handler(event, value)
   if event.name == "cv" then
     channel = event.arg + 1
-    note = util.round(value / (1 / 12))
-    Kria.cv_event_handlers[channel](note)
-    Kria.cv_values[channel] = note
+    Kria.cv_event_handlers[channel](value)
+    Kria.cv_values[channel] = value
   end
 end
 
