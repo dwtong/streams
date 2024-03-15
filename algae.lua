@@ -8,7 +8,15 @@ txi = include("lib/txi")
 
 -- major pentatonic
 scale = { 0, 2, 4, 7, 9 }
-offset = 0
+
+function quantise(cv_value, note_offset)
+  octave_volts = util.round(cv_value)
+  note = volts_to_note(cv_value)
+  note = note % 12 + note_offset
+  quantised_note = scale[note % #scale + 1]
+  volts = note_to_volts(quantised_note) + octave_volts + util.round(note / #scale)
+  return volts
+end
 
 function init()
   print("init algae")
@@ -16,16 +24,17 @@ function init()
   kria.init()
   txi.init()
 
-  for i = 1, 4 do
-    kria.cv_event_handlers[i] = function(value)
-      offset = util.round(txi.get_param(1))
-      octave_volt = util.round(value)
-      note = volt_to_note(value)
-      note = note % 12 + offset
-      quantised_note = scale[note % #scale + 1]
-      volt = note_to_volt(quantised_note) + octave_volt + util.round(note / #scale)
-      jf.play_note(volt, 1, i)
-    end
+  kria.cv_event_handlers[1] = function(value)
+    offset = util.round(txi.get_param(1))
+    volts = quantise(value, offset)
+    jf.play_note(volts, 4)
+  end
+
+  kria.cv_event_handlers[2] = function(value)
+    offset = util.round(txi.get_param(2))
+    volts = quantise(value, offset)
+    crow.output[1].volts = volts
+    crow.output[2].volts = volts
   end
 
   for i = 1, 2 do
@@ -93,10 +102,10 @@ function redraw()
   screen.update()
 end
 
-function volt_to_note(volt)
-  return util.round(volt / (1 / 12))
+function volts_to_note(volts)
+  return util.round(volts / (1 / 12))
 end
 
-function note_to_volt(note)
+function note_to_volts(note)
   return note * (1 / 12)
 end

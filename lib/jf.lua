@@ -8,13 +8,13 @@ function Jf.init()
   crow.ii.jf.mode(1)
 end
 
-function Jf.play_note(pitch, level, voice)
+function Jf.play_note(pitch_volts, velocity_volts, voice)
   if voice == nil then
     voice = last_voice % Jf.voice_count + 1
     last_voice = voice
   end
 
-  crow.ii.jf.play_voice(voice, pitch, level)
+  crow.ii.jf.play_voice(voice, pitch_volts, velocity_volts)
 end
 
 return Jf
