@@ -1,32 +1,28 @@
-local Txi = {}
-
-local params = {}
+local Txi = {
+  param = {
+    values = {},
+  },
+}
 
 local function crow_event_handler(event, value)
   if event.name == "param" then
-    params[event.arg] = value
+    Txi.param.values[event.arg] = value
   end
 end
 
 function Txi.init()
   print("init txi")
-  for i = 1, 4 do
-    params[i] = 0
-  end
-
   crow.ii.txi.event = crow_event_handler
 end
 
-function Txi.get_params()
-  for i = 1, 4 do
-    crow.ii.txi.get("param", i)
+function Txi.param.get(channel)
+  if channel == nil then
+    for i = 1, 4 do
+      crow.ii.txi.get("param", i)
+    end
+  else
+    crow.ii.txi.get("param", channel)
   end
-  return params
-end
-
-function Txi.get_param(channel)
-  crow.ii.txi.get("param", channel)
-  return params[channel]
 end
 
 return Txi

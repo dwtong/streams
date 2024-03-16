@@ -28,9 +28,8 @@ function init()
   txi.init()
 
   kria.cv.event_handlers[1] = function(value)
-    offset = util.round(txi.get_param(1))
+    offset = util.round(txi.param.values[1])
     volts = quantise(value, offset)
-    volts = quantise(value)
 
     if kria.mute.values[1] == 0 then
       jf.play_note(volts, 4)
@@ -38,9 +37,8 @@ function init()
   end
 
   kria.cv.event_handlers[2] = function(value)
-    offset = util.round(txi.get_param(2))
+    offset = util.round(txi.param.values[2])
     volts = quantise(value, offset)
-    volts = quantise(value)
 
     if kria.mute.values[2] == 0 then
       crow.output[1].volts = volts
@@ -55,8 +53,9 @@ function init()
     crow.input[i].mode("change")
     crow.input[i].change = function(in_high)
       if in_high then
-        kria.get_cv(i)
-        kria.get_mute(i)
+        txi.param.get(i)
+        kria.cv.get(i)
+        kria.mute.get(i)
         redraw()
       end
     end
@@ -64,6 +63,7 @@ function init()
 
   clock.run(function()
     while true do
+      txi.param.get()
       redraw()
       -- TODO: reduced fps until txi ii event refactor
       clock.sleep(0.5)
@@ -109,11 +109,10 @@ function redraw()
     end
   end
 
-  -- local params = txi.get_params()
-  -- for i = 1, #params do
-  --   screen.move(55, 20 + i * 10)
-  --   screen.text("txi param " .. i .. ": " .. util.round(params[i]))
-  -- end
+  for i = 1, #txi.param.values do
+    screen.move(55, 20 + i * 10)
+    screen.text("txi param " .. i .. ": " .. util.round(txi.param.values[i]))
+  end
 
   screen.update()
 end

@@ -1,7 +1,8 @@
-local Jf = {}
+local Jf = {
+  voice_count = 6,
+}
 
 local last_voice = 1
-Jf.voice_count = 6
 
 function Jf.init()
   print("init crow")

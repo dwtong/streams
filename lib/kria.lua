@@ -1,13 +1,12 @@
-local Kria = {}
-
-Kria.cv = {
-  event_handlers = {},
-  values = {},
-}
-
-Kria.mute = {
-  event_handlers = {},
-  values = {},
+local Kria = {
+  cv = {
+    event_handlers = {},
+    values = {},
+  },
+  mute = {
+    event_handlers = {},
+    values = {},
+  },
 }
 
 local function crow_event_handler(event, value)
@@ -31,11 +30,11 @@ function Kria.init()
   crow.ii.kria.event = crow_event_handler
 end
 
-function Kria.get_cv(channel)
+function Kria.cv.get(channel)
   crow.ii.kria.get("cv", channel - 1)
 end
 
-function Kria.get_mute(channel)
+function Kria.mute.get(channel)
   crow.ii.kria.get("mute", channel)
 end
 
