@@ -1,13 +1,13 @@
 -- algae
 
+musicutil = require("musicutil")
 util = require("util")
 
 jf = include("lib/jf")
 kria = include("lib/kria")
 -- txi = include("lib/txi")
 
--- major pentatonic
-scale = { 0, 2, 4, 7, 9 }
+scale = musicutil.generate_scale(0, "major pentatonic", 4)
 
 function init_params()
   params:add_separator("global")
@@ -124,10 +124,13 @@ function quantise(cv_value, note_offset)
   if note_offset == nil then
     note_offset = 0
   end
-  octave_volts = util.round(cv_value)
+
   note = volts_to_note(cv_value)
-  note = note % 12 + note_offset
-  quantised_note = scale[note % #scale + 1]
-  volts = note_to_volts(quantised_note) + octave_volts + util.round(note / #scale)
+  octave = note / 12
+  clamped_note = note % 12
+  note_index = clamped_note + 1 + note_offset
+  quantised_note = scale[note_index]
+
+  volts = note_to_volts(quantised_note + octave) -- + octave_volts + util.round(note / #scale)
   return volts
 end
