@@ -27,7 +27,7 @@ function init_params()
   for i = 1, 4 do
     params:add_group("voice " .. i, 4)
     params:add_number("voice_root_offset_" .. i, "root offset", -11, 11, 0)
-    params:add_number("voice_note_offset_" .. i, "note offset", -11, 11, 0)
+    params:add_number("voice_note_offset_" .. i, "note offset", 0, 11, 0)
     params:add_number("voice_octave_offset_" .. i, "octave offset", -3, 3, 0)
     params:add_number("voice_carve_" .. i, "carve", 0, 4, 0)
     params:add_number("voice_chance_" .. i, "chance", 0, 100, 100)
@@ -133,17 +133,18 @@ function quantise_note_for_voice(cv_value, voice)
   scale_type = params:get("global_scale_type")
   root_offset = params:get("voice_root_offset_" .. voice)
   note_offset = params:get("voice_note_offset_" .. voice)
+  octave_offset = params:get("voice_octave_offset_" .. voice)
 
   root = circle_of_fifths_at(root_index + root_offset)
   scale = musicutil.generate_scale(root, scale_type, 6)
 
   note = volts_to_note(cv_value)
-  octave = note / 12
+  octave_volts = note / 12 + octave_offset
   clamped_note = note % 12
   note_index = clamped_note + 1 + note_offset
   quantised_note = scale[note_index]
 
-  volts = note_to_volts(quantised_note + octave)
+  volts = note_to_volts(quantised_note) + octave_volts
   return volts
 end
 

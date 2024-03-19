@@ -5,8 +5,9 @@ local Jf = {
 local last_voice = 1
 
 function Jf.init()
-  print("init crow")
+  print("init jf")
   crow.ii.jf.mode(1)
+  crow.ii.jf.transpose(-2)
 end
 
 function Jf.play_note(pitch_volts, velocity_volts, voice)
