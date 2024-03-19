@@ -21,7 +21,7 @@ function init_params()
 
   params:add_separator("voices")
   for i = 1, 4 do
-    params:add_group("voice " .. i, 4)
+    params:add_group("voice " .. i, 5)
     params:add_number("voice_root_offset_" .. i, "root offset", -11, 11, 0)
     params:add_number("voice_note_offset_" .. i, "note offset", 0, 11, 0)
     params:add_number("voice_octave_offset_" .. i, "octave offset", -3, 3, 0)
@@ -43,25 +43,10 @@ function init()
 
   init_params()
 
-  kria.cv.event_handlers[1] = function(cv_value)
-    volts = quantise_note_for_voice(cv_value, 1)
+  ----- CROW INIT -----
 
-    if kria.mute.values[1] == 0 then
-      jf.play_note(volts, 4)
-    end
-  end
-
-  kria.cv.event_handlers[2] = function(cv_value)
-    if kria.mute.values[2] == 0 then
-      volts = quantise_note_for_voice(cv_value, 2)
-      crow.output[1].volts = volts
-    end
-
-    if kria.mute.values[3] == 0 then
-      volts = quantise_note_for_voice(cv_value, voice)
-      crow.output[2].volts = volts
-    end
-  end
+  crow.output[2].action = "pulse()"
+  crow.output[4].action = "pulse()"
 
   for i = 1, 2 do
     crow.input[i].mode("change")
@@ -71,6 +56,34 @@ function init()
         kria.mute.get(i)
         redraw()
       end
+    end
+  end
+
+  ----- KRIA EVENT HOOKS -----
+
+  kria.cv.event_handlers[1] = function(cv_value)
+    local volts = quantise_note_for_voice(cv_value, 1)
+    local chance = params:get("voice_chance_1")
+
+    if kria.mute.values[1] == 0 and chance >= math.random(100) then
+      jf.play_note(volts, 4)
+    end
+  end
+
+  kria.cv.event_handlers[2] = function(cv_value)
+    local chance = params:get("voice_chance_2")
+
+    if kria.mute.values[2] == 0 and chance >= math.random(100) then
+      local volts = quantise_note_for_voice(cv_value, 2)
+      crow.output[1].volts = volts
+      crow.output[2]()
+    end
+
+    chance = params:get("voice_chance_3")
+    if kria.mute.values[3] == 0 and chance >= math.random(100) then
+      local volts = quantise_note_for_voice(cv_value, 3)
+      crow.output[3].volts = volts
+      crow.output[4]()
     end
   end
 end
@@ -107,7 +120,7 @@ function redraw()
   screen.text("kria: ")
   for i = 1, 4 do
     screen.move(69 + i * 10, 10)
-    cv_value = kria.cv.values[i]
+    local cv_value = kria.cv.values[i]
     if cv_value then
       screen.text(cv_value)
     end
@@ -115,6 +128,8 @@ function redraw()
 
   screen.update()
 end
+
+----- QUANT -----
 
 function volts_to_note(volts)
   return util.round(volts / (1 / 12))
@@ -125,24 +140,26 @@ function note_to_volts(note)
 end
 
 function quantise_note_for_voice(cv_value, voice)
-  root_index = params:get("global_root")
-  scale_type = params:get("global_scale_type")
-  root_offset = params:get("voice_root_offset_" .. voice)
-  note_offset = params:get("voice_note_offset_" .. voice)
-  octave_offset = params:get("voice_octave_offset_" .. voice)
+  local root_index = params:get("global_root")
+  local scale_type = params:get("global_scale_type")
+  local root_offset = params:get("voice_root_offset_" .. voice)
+  local note_offset = params:get("voice_note_offset_" .. voice)
+  local octave_offset = params:get("voice_octave_offset_" .. voice)
 
-  root = circle_of_fifths_at(root_index + root_offset)
-  scale = musicutil.generate_scale(root, scale_type, 6)
+  local root = circle_of_fifths_at(root_index + root_offset)
+  local scale = musicutil.generate_scale(root, scale_type, 6)
 
-  note = volts_to_note(cv_value)
-  octave_volts = note / 12 + octave_offset
-  clamped_note = note % 12
-  note_index = clamped_note + 1 + note_offset
-  quantised_note = scale[note_index]
+  local note = volts_to_note(cv_value)
+  local octave_volts = note / 12 + octave_offset
+  local clamped_note = note % 12
+  local note_index = clamped_note + 1 + note_offset
+  local quantised_note = scale[note_index]
 
-  volts = note_to_volts(quantised_note) + octave_volts
+  local volts = note_to_volts(quantised_note) + octave_volts
   return volts
 end
+
+----- SCALE -----
 
 function circle_of_fifths_at(index)
   index = (index - 1) % 12
@@ -154,10 +171,18 @@ function circle_of_fifths_at(index)
 end
 
 function generate_circle_of_fifths_names()
-  notes = {}
+  local notes = {}
   for i = 1, 12 do
     note_num = circle_of_fifths_at(i)
     notes[i] = musicutil.note_num_to_name(note_num)
   end
   return notes
+end
+
+function generate_scale_names()
+  local scales = {}
+  for i, scale in ipairs(musicutil.SCALES) do
+    scales[i] = string.lower(scale.name)
+  end
+  return scales
 end
