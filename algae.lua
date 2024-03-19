@@ -16,11 +16,7 @@ carve = {
 
 function init_params()
   params:add_separator("global")
-  -- TODO: options here for scales to select
-  -- see musicutil docs for good examples on params
-  -- and for building scales from parameter actions
-  -- and parameter formatter
-  params:add_number("global_scale_type", "scale", 1, 3, 1)
+  params:add_option("global_scale_type", "scale", generate_scale_names(), 1)
   params:add_option("global_root", "root note", generate_circle_of_fifths_names(), 1)
 
   params:add_separator("voices")
