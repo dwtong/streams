@@ -5,19 +5,13 @@ util = require("util")
 
 jf = include("lib/jf")
 kria = include("lib/kria")
+scale = include("lib/scale")
 -- txi = include("lib/txi")
-
-carve = {
-  -- 5 note scales (pentatonic)
-  [5] = { 1, 4, 2, 5, 3 },
-  -- 7 note scales
-  [7] = { 1, 5, 3, 7, 2, 6, 4 },
-}
 
 function init_params()
   params:add_separator("global")
-  params:add_option("global_scale_type", "scale", generate_scale_names(), 1)
-  params:add_option("global_root", "root note", generate_circle_of_fifths_names(), 1)
+  params:add_option("global_scale_type", "scale", scale.scale_names(), 1)
+  params:add_option("global_root", "root note", scale.circle_of_fifths_names(), 1)
 
   params:add_separator("voices")
   for i = 1, 4 do
@@ -25,6 +19,7 @@ function init_params()
     params:add_number("voice_root_offset_" .. i, "root offset", -11, 11, 0)
     params:add_number("voice_note_offset_" .. i, "note offset", 0, 11, 0)
     params:add_number("voice_octave_offset_" .. i, "octave offset", -3, 3, 0)
+    -- TODO: implement me
     params:add_number("voice_carve_" .. i, "carve", 0, 4, 0)
     params:add_number("voice_chance_" .. i, "chance", 0, 100, 100)
   end
@@ -146,7 +141,7 @@ function quantise_note_for_voice(cv_value, voice)
   local note_offset = params:get("voice_note_offset_" .. voice)
   local octave_offset = params:get("voice_octave_offset_" .. voice)
 
-  local root = circle_of_fifths_at(root_index + root_offset)
+  local root = scale.circle_of_fifths_at(root_index + root_offset)
   local scale = musicutil.generate_scale(root, scale_type, 6)
 
   local note = volts_to_note(cv_value)
@@ -160,29 +155,3 @@ function quantise_note_for_voice(cv_value, voice)
 end
 
 ----- SCALE -----
-
-function circle_of_fifths_at(index)
-  index = (index - 1) % 12
-  if index % 2 == 0 then
-    return index
-  else
-    return (index + 6) % 12
-  end
-end
-
-function generate_circle_of_fifths_names()
-  local notes = {}
-  for i = 1, 12 do
-    note_num = circle_of_fifths_at(i)
-    notes[i] = musicutil.note_num_to_name(note_num)
-  end
-  return notes
-end
-
-function generate_scale_names()
-  local scales = {}
-  for i, scale in ipairs(musicutil.SCALES) do
-    scales[i] = string.lower(scale.name)
-  end
-  return scales
-end
