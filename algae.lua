@@ -19,8 +19,7 @@ function init_params()
     params:add_number("voice_root_offset_" .. i, "root offset", -11, 11, 0)
     params:add_number("voice_note_offset_" .. i, "note offset", 0, 11, 0)
     params:add_number("voice_octave_offset_" .. i, "octave offset", -3, 3, 0)
-    -- TODO: implement me
-    params:add_number("voice_carve_" .. i, "carve", 0, 4, 0)
+    params:add_number("voice_carve_" .. i, "carve", 0, 5, 0)
     params:add_number("voice_chance_" .. i, "chance", 0, 100, 100)
   end
 
@@ -140,18 +139,16 @@ function quantise_note_for_voice(cv_value, voice)
   local root_offset = params:get("voice_root_offset_" .. voice)
   local note_offset = params:get("voice_note_offset_" .. voice)
   local octave_offset = params:get("voice_octave_offset_" .. voice)
+  local carve_amount = params:get("voice_carve_" .. voice)
 
   local root = scale.circle_of_fifths_at(root_index + root_offset)
-  local scale = musicutil.generate_scale(root, scale_type, 6)
-
+  local carved_scale = scale.carved_scale(root, scale_type, carve_amount)
   local note = volts_to_note(cv_value)
-  local octave_volts = note / 12 + octave_offset
   local clamped_note = note % 12
   local note_index = clamped_note + 1 + note_offset
-  local quantised_note = scale[note_index]
+  local quantised_note = scale.note_at_index(carved_scale, note_index)
 
-  local volts = note_to_volts(quantised_note) + octave_volts
-  return volts
+  local octave_volts = math.floor(note / 12 + octave_offset) or 0
+
+  return note_to_volts(quantised_note) + octave_volts
 end
-
------ SCALE -----

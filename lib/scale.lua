@@ -35,8 +35,8 @@ function Scale.circle_of_fifths_names()
   return notes
 end
 
-function Scale.carve_scale(scale_type, carve_amount)
-  local scale_notes = musicutil.generate_scale(0, scale_type, 1)
+function Scale.carved_scale(root, scale_type, carve_amount)
+  local scale_notes = musicutil.generate_scale(root, scale_type, 1)
   local carved_scale = {}
 
   for length, priorities in pairs(carve_priorities) do
@@ -55,6 +55,13 @@ function Scale.carve_scale(scale_type, carve_amount)
 
   table.sort(carved_scale)
   return carved_scale
+end
+
+function Scale.note_at_index(scale_notes, note_index)
+  local octave = math.floor((note_index - 1) / #scale_notes)
+  local clamped_note_index = (note_index - 1) % #scale_notes + 1
+  local note = scale_notes[clamped_note_index] + octave * 12
+  return note
 end
 
 return Scale
