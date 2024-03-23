@@ -8,6 +8,19 @@ kria = include("lib/kria")
 scale = include("lib/scale")
 -- txi = include("lib/txi")
 
+local spec = {
+  JF_VELOCITY = controlspec.def({
+    min = 0,
+    max = 5.0,
+    warp = "lin",
+    step = 0.1,
+    default = 1,
+    -- quantum = 0.1,
+    wrap = false,
+    units = "V",
+  }),
+}
+
 function init_params()
   params:add_separator("global")
   params:add_option("global_scale_type", "scale", scale.scale_names(), 1)
@@ -24,6 +37,10 @@ function init_params()
   end
 
   params:add_separator("just friends")
+  params:add_number("jf_voice_count", "voice count", 1, 6, 6)
+  params:set_action("jf_voice_count", jf.set_voice_count)
+  params:add_control("jf_velocity_min", "velocity min", spec.JF_VELOCITY)
+  params:add_control("jf_velocity_range", "velocity range", spec.JF_VELOCITY)
 
   params:add_separator("clouds")
   params:add_number("clouds_octave", "octave", 0, -5, 5)
@@ -58,9 +75,10 @@ function init()
   kria.cv.event_handlers[1] = function(cv_value)
     local volts = quantise_note_for_voice(cv_value, 1)
     local chance = params:get("voice_chance_1")
+    local velocity = params:get("jf_velocity_min") + params:get("jf_velocity_range") * math.random()
 
     if kria.mute.values[1] == 0 and chance >= math.random(100) then
-      jf.play_note(volts, 4)
+      jf.play_note(volts, velocity)
     end
   end
 

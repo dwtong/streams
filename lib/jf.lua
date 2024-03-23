@@ -1,7 +1,6 @@
-local Jf = {
-  voice_count = 6,
-}
+local Jf = {}
 
+local voice_count = 6
 local last_voice = 1
 
 function Jf.init()
@@ -10,9 +9,13 @@ function Jf.init()
   crow.ii.jf.transpose(-2)
 end
 
+function Jf.set_voice_count(new_count)
+  voice_count = new_count
+end
+
 function Jf.play_note(pitch_volts, velocity_volts, voice)
   if voice == nil then
-    voice = last_voice % Jf.voice_count + 1
+    voice = last_voice % voice_count + 1
     last_voice = voice
   end
 
