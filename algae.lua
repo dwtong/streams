@@ -6,6 +6,7 @@ util = require("util")
 jf = include("lib/jf")
 kria = include("lib/kria")
 scale = include("lib/scale")
+txo = include("lib/txo")
 -- txi = include("lib/txi")
 
 local spec = {
@@ -18,6 +19,14 @@ local spec = {
     -- quantum = 0.1,
     wrap = false,
     units = "V",
+  }),
+  TXO_ENV = controlspec.def({
+    min = 1,
+    max = 30000,
+    warp = "exp",
+    step = 0,
+    default = 1,
+    units = "ms",
   }),
 }
 
@@ -42,22 +51,42 @@ function init_params()
   params:add_control("jf_velocity_min", "velocity min", spec.JF_VELOCITY)
   params:add_control("jf_velocity_range", "velocity range", spec.JF_VELOCITY)
 
+  params:add_separator("txo")
+  for i = 1, 2 do
+    params:add_control("txo_env_rise_" .. i, "env rise " .. i, spec.TXO_ENV)
+    params:set_action("txo_env_rise_" .. i, function(amount)
+      txo.env_rise(i, amount)
+    end)
+    params:add_control("txo_env_fall_" .. i, "env fall " .. i, spec.TXO_ENV)
+    params:set_action("txo_env_fall_" .. i, function(amount_ms)
+      txo.env_fall(i, amount_ms)
+    end)
+  end
+
   params:add_separator("clouds")
   params:add_number("clouds_octave", "octave", 0, -5, 5)
   params:add_number("clouds_clock_division", "clock div", 1, 4, 1)
+
+  params:bang()
+end
+
+function set_crow_envelopes()
+  for i = 1, 2 do
+    local rise = params:get("crow_env_rise_" .. i)
+    local fall = params:get("crow_env_fall_" .. i)
+    crow.output[i * 2].action = string.format("ar(%f, %f)", rise, fall)
+  end
 end
 
 function init()
   print("init algae")
   jf.init()
   kria.init()
+  txo.init()
 
   init_params()
 
   ----- CROW INIT -----
-
-  crow.output[2].action = "pulse()"
-  crow.output[4].action = "pulse()"
 
   for i = 1, 2 do
     crow.input[i].mode("change")
@@ -88,14 +117,16 @@ function init()
     if kria.mute.values[2] == 0 and chance >= math.random(100) then
       local volts = quantise_note_for_voice(cv_value, 2)
       crow.output[1].volts = volts
-      crow.output[2]()
+      -- crow.output[2]()
+      txo.env_trigger(1)
     end
 
     chance = params:get("voice_chance_3")
     if kria.mute.values[3] == 0 and chance >= math.random(100) then
       local volts = quantise_note_for_voice(cv_value, 3)
       crow.output[3].volts = volts
-      crow.output[4]()
+      -- crow.output[4]()
+      txo.env_trigger(2)
     end
   end
 end
