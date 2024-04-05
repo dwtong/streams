@@ -4,7 +4,7 @@ local Txi = {
   },
 }
 
-local function crow_event_handler(event, value)
+local function crow_event_listener(event, value)
   if event.name == "param" then
     Txi.param.values[event.arg] = value
   end
@@ -12,7 +12,7 @@ end
 
 function Txi.init()
   print("init txi")
-  crow.ii.txi.event = crow_event_handler
+  crow.ii.txi.event = crow_event_listener
 end
 
 function Txi.param.get(channel)
