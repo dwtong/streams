@@ -1,5 +1,7 @@
 local Scale = {}
 
+local musicutil = require("musicutil")
+
 local carve_priorities = {
   -- 5 note scales (pentatonic)
   [5] = { 1, 4, 2, 5, 3 },
