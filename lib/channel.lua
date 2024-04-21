@@ -2,6 +2,8 @@ local scale = include("lib/scale")
 
 local Channel = {}
 
+local quantise_modes = { "none", "scale index", "nearest" }
+
 function Channel:new(id, observer)
     local o = {}
     setmetatable(o, self)
@@ -13,16 +15,18 @@ end
 
 function Channel:trigger_event(is_high)
     local source = "channel_" .. self.id
-    self.trigger_ready = true
-    self:play_note()
-    self.observer:notify(source, "trigger", is_high)
+    if is_high then
+        self.trigger_ready = true
+        self:play_note()
+        self.observer:notify(source, "trigger", is_high)
+    end
 end
 
 function Channel:note_event(raw_note)
     local source = "channel_" .. self.id
     local quant_note = self:quantise_note(raw_note)
-    if quant_note ~= self.note then
-        self.note = quant_note
+    if quant_note ~= self.next_note then
+        self.next_note = quant_note
         self.observer:notify(source, "note", quant_note)
     end
     self.note_ready = true
@@ -31,9 +35,10 @@ end
 
 function Channel:init_params(nb)
     params:add_separator("channel " .. self.id)
+    params:add_option("channel_" .. self.id .. "_quantise_mode", "quantise mode", quantise_modes, 1)
     params:add_number("channel_" .. self.id .. "_root_offset", "root offset", -11, 11, 0)
     params:add_number("channel_" .. self.id .. "_note_offset", "note offset", 0, 11, 0)
-    params:add_number("channel_" .. self.id .. "_octave_offset", "octave offset", 0, 7, 3)
+    params:add_number("channel_" .. self.id .. "_octave_offset", "octave offset", -3, 4, 0)
     params:add_number("channel_" .. self.id .. "_carve", "carve", 0, 5, 0)
     params:add_number("channel_" .. self.id .. "_chance", "chance", 0, 100, 100)
     nb:add_param("channel_" .. self.id .. "_output", "output")
@@ -48,6 +53,7 @@ function Channel:play_note()
     if self.note_ready and self.trigger_ready then
         self.note_ready = false
         self.trigger_ready = false
+        self.note = self.next_note
         local player = params:lookup_param("channel_" .. self.id .. "_output"):get_player()
         -- TODO: velocity and duration params
         player:play_note(self.note, 0.5, 0.2)
@@ -55,20 +61,28 @@ function Channel:play_note()
 end
 
 function Channel:quantise_note(note)
-    local note_offset = self:get_param("note_offset")
-    local octave_offset = self:get_param("octave_offset")
-    local carved_scale = self:get_carved_scale()
-
-    -- assumes "index" quantisation type, where the unquantised note is used as an index to the scale note
-    -- TODO: "nearest" quantisation type
+    local quantise_mode = quantise_modes[self:get_param("quantise_mode")]
+    local octave_offset = self:get_octave()
     local clamped_note = note % 12
-    local note_index = clamped_note + 1 + note_offset
-    local quantised_note = scale.note_at_index(carved_scale, note_index)
 
-    -- include octaves from provided note in octave offset
-    local octave_offset_notes = (math.floor(note / 12 + octave_offset) or 0) * 12
+    if quantise_mode == "none" then
+        -- TODO: should unquantised notes follow octaves?
+        -- perhaps two different quantise modes?
+        return clamped_note + octave_offset * 12
+    elseif quantise_mode == "nearest" then
+        -- TODO: nearest mode not implemented
+        return note
+    elseif quantise_mode == "scale index" then
+        local note_offset = self:get_param("note_offset")
+        local carved_scale = self:get_carved_scale()
+        local note_index = clamped_note + 1 + note_offset
+        local quantised_note = scale.note_at_index(carved_scale, note_index)
+        -- TODO: should we do this in other quantise modes?
+        -- include octaves from provided note in octave offset
+        local octave_offset_notes = (math.floor(note / 12 + octave_offset) or 0) * 12
 
-    return quantised_note + octave_offset_notes
+        return quantised_note + octave_offset_notes
+    end
 end
 
 function Channel:get_root_note()
@@ -82,6 +96,10 @@ function Channel:get_carved_scale()
     local scale_type = params:get("global_scale_type")
     local carve_amount = self:get_param("carve")
     return scale.carved_scale(root_note, scale_type, carve_amount)
+end
+
+function Channel:get_octave()
+    return self:get_param("octave_offset") + DEFAULT_OCTAVE_OFFSET
 end
 
 return Channel
