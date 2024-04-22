@@ -45,16 +45,19 @@ function init()
         observer:add_listener("crow_" .. i, "trigger", function(is_high)
             channel:trigger_event(is_high)
         end)
-        observer:add_listener("channel_" .. i, "trigger", function(is_high)
-            if is_high then
-                sources.kria.get("cv", i)
-            end
-        end)
         observer:add_listener("kria_" .. i, "cv", function(cv_value)
             local note = volts_to_note(cv_value)
             channel:note_event(note)
         end)
+        channel:on_trigger(function(is_high)
+            if is_high then
                 devices.kria.get("cv", i)
+            end
+        end)
+        channel:on_note(function(note)
+            local player = params:lookup_param("channel_" .. channel.id .. "_output"):get_player()
+            player:play_note(note, 0.5, 0.2)
+        end)
     end
 
     -- channel 3 samples channel 1 every fourth beat

@@ -10,27 +10,41 @@ function Channel:new(id, observer)
     self.__index = self
     o.id = id
     o.observer = observer
+    o.trigger_fn = function() end
+    o.note_fn = function() end
     return o
+end
+
+function Channel:on_trigger(trigger_fn)
+    self.trigger_fn = trigger_fn
+end
+
+function Channel:on_note(note_fn)
+    self.note_fn = note_fn
 end
 
 function Channel:trigger_event(is_high)
     local source = "channel_" .. self.id
-    if is_high then
-        self.trigger_ready = true
-        self:play_note()
-        self.observer:notify(source, "trigger", is_high)
-    end
+    self.trigger_fn(is_high)
+    self.observer:notify(source, "trigger", is_high)
+    -- if is_high then
+    -- self.trigger_ready = true
+    -- self:play_note()
+    -- end
 end
 
 function Channel:note_event(raw_note)
     local source = "channel_" .. self.id
     local quant_note = self:quantise_note(raw_note)
-    if quant_note ~= self.next_note then
-        self.next_note = quant_note
+    local note_changed = quant_note ~= self.next_note
+    self.next_note = quant_note
+    self.note_fn(quant_note)
+    -- self.note_ready = true
+    -- self:play_note()
+
+    if note_changed then
         self.observer:notify(source, "note", quant_note)
     end
-    self.note_ready = true
-    self:play_note()
 end
 
 function Channel:init_params(nb)
@@ -49,16 +63,16 @@ function Channel:get_param(param_name)
     return params:get(param_id)
 end
 
-function Channel:play_note()
-    if self.note_ready and self.trigger_ready then
-        self.note_ready = false
-        self.trigger_ready = false
-        self.note = self.next_note
-        local player = params:lookup_param("channel_" .. self.id .. "_output"):get_player()
-        -- TODO: velocity and duration params
-        player:play_note(self.note, 0.5, 0.2)
-    end
-end
+-- function Channel:play_note()
+--     if self.note_ready and self.trigger_ready then
+--         self.note_ready = false
+--         self.trigger_ready = false
+--         self.note = self.next_note
+--         local player = params:lookup_param("channel_" .. self.id .. "_output"):get_player()
+--         -- TODO: velocity and duration params
+--         player:play_note(self.note, 0.5, 0.2)
+--     end
+-- end
 
 function Channel:quantise_note(note)
     local quantise_mode = quantise_modes[self:get_param("quantise_mode")]
