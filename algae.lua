@@ -10,9 +10,9 @@ local scale = include("lib/scale")
 local Observer = include("lib/observer")
 local Channel = include("lib/channel")
 
-local sources = {
-    crow = include("lib/sources/crow"),
-    kria = include("lib/sources/kria"),
+local devices = {
+    crow = include("lib/devices/crow"),
+    kria = include("lib/devices/kria"),
 }
 
 channels = {}
@@ -20,9 +20,9 @@ local screen_dirty = false
 
 function init()
     local observer = Observer:new()
-    for source_name, source in pairs(sources) do
-        source.enable(observer)
-        print("enabled source: " .. source_name)
+    for device_name, device in pairs(devices) do
+        device.enable(observer)
+        print("enabled device: " .. device_name)
     end
 
     nb:init()
@@ -38,8 +38,8 @@ function init()
     end
 
     -- channels 1 & 2:
-    -- trigger source: crow in 1 & 2
-    -- note source: kria cv 1 & 2
+    -- trigger device: crow in 1 & 2
+    -- note device: kria cv 1 & 2
     for i = 1, 2 do
         local channel = channels[i]
         observer:add_listener("crow_" .. i, "trigger", function(is_high)
@@ -54,6 +54,7 @@ function init()
             local note = volts_to_note(cv_value)
             channel:note_event(note)
         end)
+                devices.kria.get("cv", i)
     end
 
     -- channel 3 samples channel 1 every fourth beat
