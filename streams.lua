@@ -16,7 +16,7 @@ local devices = {
 }
 
 channels = {}
-local screen_dirty = false
+local is_screen_dirty = false
 
 function init()
     local observer = Observer:new()
@@ -32,31 +32,38 @@ function init()
         local channel = Channel:new(i, observer)
         channel:init_params(nb)
         table.insert(channels, channel)
-        observer:add_listener("channel_" .. i, "note", function()
-            screen_dirty = true
-        end)
     end
+
+    observer:add_listener("channel", "note", function()
+        is_screen_dirty = true
+    end)
 
     -- channels 1 & 2:
     -- trigger device: crow in 1 & 2
     -- note device: kria cv 1 & 2
     for i = 1, 2 do
         local channel = channels[i]
-        observer:add_listener("crow_" .. i, "trigger", function(is_high)
-            channel:trigger_event(is_high)
+        observer:add_listener("crow", "trigger", function(crow_channel, is_high)
+            if crow_channel == i then
+                channel:trigger_event(is_high)
+            end
         end)
-        observer:add_listener("kria_" .. i, "cv", function(cv_value)
-            local note = volts_to_note(cv_value)
-            channel:note_event(note)
+        observer:add_listener("kria", "cv", function(kria_channel, cv_value)
+            if kria_channel == i then
+                local note = volts_to_note(cv_value)
+                channel:note_event(note)
+            end
         end)
-        channel:on_trigger(function(is_high)
-            if is_high then
+        observer:add_listener("channel", "trigger", function(trigger_channel, is_high)
+            if trigger_channel == i and is_high then
                 devices.kria.get("cv", i)
             end
         end)
-        channel:on_note(function(note)
-            local player = params:lookup_param("channel_" .. channel.id .. "_output"):get_player()
-            player:play_note(note, 0.5, 0.2)
+        observer:add_listener("channel", "note", function(note_channel, note)
+            if note_channel == i then
+                local player = params:lookup_param("channel_" .. channel.id .. "_output"):get_player()
+                player:play_note(note, 0.5, 0.2)
+            end
         end)
     end
 
@@ -67,15 +74,17 @@ function init()
             clock.sync(4)
         end
     end)
-    observer:add_listener("channel_1", "note", function(note)
-        channels[3]:note_event(note)
+    observer:add_listener("channel", "note", function(note_channel, note)
+        if note_channel == 1 then
+            channels[3]:note_event(note)
+        end
     end)
 
     nb:add_player_params()
 
     clock.run(function()
         while true do
-            if screen_dirty then
+            if is_screen_dirty then
                 redraw()
             end
             clock.sleep(1 / 30)
