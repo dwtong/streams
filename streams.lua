@@ -1,4 +1,4 @@
--- algae
+-- streams
 
 DEFAULT_OCTAVE_OFFSET = 4 -- middle C
 
@@ -114,7 +114,7 @@ function key(n, z)
 end
 
 function r()
-    norns.script.load("code/algae/algae.lua")
+    norns.script.load("code/streams/streams.lua")
 end
 
 function volts_to_note(volts)
