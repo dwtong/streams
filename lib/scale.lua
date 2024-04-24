@@ -37,6 +37,11 @@ function Scale.circle_of_fifths_names()
     return notes
 end
 
+function Scale.length(scale_type)
+    local scale_notes = musicutil.generate_scale(1, scale_type, 1)
+    return #scale_notes - 1
+end
+
 function Scale.carved_scale(root, scale_type, carve_amount)
     local scale_notes = musicutil.generate_scale(root, scale_type, 1)
     local carved_scale = {}

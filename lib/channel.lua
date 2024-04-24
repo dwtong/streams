@@ -37,12 +37,14 @@ function Channel:note_event(unquantised_note)
 end
 
 function Channel:init_params(nb)
+    local scale_type = params:get("global_scale_type")
+    local carve_max = scale.length(scale_type) - 1
     params:add_separator("channel " .. self.id)
     params:add_option("channel_" .. self.id .. "_quantise_mode", "quantise mode", quantise_modes, 1)
     params:add_number("channel_" .. self.id .. "_root_offset", "root offset", -11, 11, 0)
     params:add_number("channel_" .. self.id .. "_note_offset", "note offset", 0, 11, 0)
     params:add_number("channel_" .. self.id .. "_octave_offset", "octave offset", -3, 4, 0)
-    params:add_number("channel_" .. self.id .. "_carve", "carve", 0, 5, 0)
+    params:add_number("channel_" .. self.id .. "_carve", "carve", 0, carve_max, 0)
     params:add_number("channel_" .. self.id .. "_chance", "chance", 0, 100, 100)
     params:add_number("channel_" .. self.id .. "_velocity_min", "velocity min", 0, 10, 2)
     params:add_number("channel_" .. self.id .. "_velocity_range", "velocity range", 0, 10, 2)
@@ -107,7 +109,8 @@ end
 function Channel:get_carved_scale()
     local root_note = self:get_root_note()
     local scale_type = params:get("global_scale_type")
-    local carve_amount = self:get_param("carve")
+    local scale_length = scale.length(scale_type)
+    local carve_amount = util.clamp(self:get_param("carve"), 0, scale_length - 1)
     return scale.carved_scale(root_note, scale_type, carve_amount)
 end
 

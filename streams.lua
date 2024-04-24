@@ -5,7 +5,7 @@ DEFAULT_OCTAVE_OFFSET = 4 -- middle C
 local musicutil = require("musicutil")
 
 local nb = include("lib/nb/lib/nb")
-local scale = include("lib/scale")
+scale = include("lib/scale")
 
 local Observer = include("lib/observer")
 local Channel = include("lib/channel")
@@ -156,6 +156,14 @@ end
 
 function init_global_params()
     params:add_separator("global")
-    params:add_option("global_scale_type", "scale", scale.scale_names(), 11)
     params:add_option("global_root", "root note", scale.circle_of_fifths_names(), 1)
+    params:add_option("global_scale_type", "scale", scale.scale_names(), 11)
+    params:set_action("global_scale_type", function(scale_type)
+        local carve_max = scale.length(scale_type) - 1
+        for i = 1, #channels do
+            local param = params:lookup_param("channel_" .. i .. "_carve")
+            param.max = carve_max
+        end
+        _menu.rebuild_params()
+    end)
 end
