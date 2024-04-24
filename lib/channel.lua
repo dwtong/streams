@@ -44,6 +44,8 @@ function Channel:init_params(nb)
     params:add_number("channel_" .. self.id .. "_octave_offset", "octave offset", -3, 4, 0)
     params:add_number("channel_" .. self.id .. "_carve", "carve", 0, 5, 0)
     params:add_number("channel_" .. self.id .. "_chance", "chance", 0, 100, 100)
+    params:add_number("channel_" .. self.id .. "_velocity_min", "velocity min", 0, 10, 2)
+    params:add_number("channel_" .. self.id .. "_velocity_range", "velocity range", 0, 10, 2)
     nb:add_param("channel_" .. self.id .. "_output", "output")
 end
 
@@ -58,11 +60,15 @@ function Channel:play_note()
     end
     local chance = self:get_param("chance")
     local player = params:lookup_param("channel_" .. self.id .. "_output"):get_player()
+    local velocity_min = self:get_param("velocity_min")
+    local velocity_range = self:get_param("velocity_range")
+    local velocity_offset = velocity_range > 0 and math.random(velocity_range) or 0
+    local velocity = util.clamp(velocity_min + velocity_offset, 0, 10) / 10
     self.note_ready = false
     self.trigger_ready = false
     self.note = self.next_note
     if chance >= math.random(100) then
-        player:play_note(self.note, 0.5, 0.2)
+        player:play_note(self.note, velocity, 0.2)
     end
 end
 
