@@ -38,7 +38,7 @@ end
 
 function Channel:init_params(nb)
     params:add_separator("channel " .. self.id)
-    params:add_option("channel_" .. self.id .. "_quantise_mode", "quantise mode", quantise_modes, 4)
+    params:add_option("channel_" .. self.id .. "_quantise_mode", "quantise mode", quantise_modes, 1)
     params:add_number("channel_" .. self.id .. "_root_offset", "root offset", -11, 11, 0)
     params:add_number("channel_" .. self.id .. "_note_offset", "note offset", 0, 11, 0)
     params:add_number("channel_" .. self.id .. "_octave_offset", "octave offset", -3, 4, 0)
@@ -56,12 +56,14 @@ function Channel:play_note()
     if not self.note_ready or not self.trigger_ready then
         return
     end
+    local chance = self:get_param("chance")
+    local player = params:lookup_param("channel_" .. self.id .. "_output"):get_player()
     self.note_ready = false
     self.trigger_ready = false
     self.note = self.next_note
-    local player = params:lookup_param("channel_" .. self.id .. "_output"):get_player()
-    -- TODO: velocity and duration params
-    player:play_note(self.note, 0.5, 0.2)
+    if chance >= math.random(100) then
+        player:play_note(self.note, 0.5, 0.2)
+    end
 end
 
 function Channel:quantise_note(note)
