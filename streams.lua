@@ -43,26 +43,24 @@ function init()
     -- note device: kria cv 1 & 2
     for i = 1, 2 do
         local channel = channels[i]
-        observer:add_listener("crow", "trigger", function(crow_channel, is_high)
-            if crow_channel == i then
-                channel:trigger_event(is_high)
+
+        -- 1: trigger at crow input fires channel trigger event
+        observer:add_listener("crow", "trigger", function(event)
+            if event.channel == i then
+                channel:trigger_event(event.value)
             end
         end)
-        observer:add_listener("kria", "cv", function(kria_channel, cv_value)
-            if kria_channel == i then
-                local note = volts_to_note(cv_value)
-                channel:note_event(note)
-            end
-        end)
-        observer:add_listener("channel", "trigger", function(trigger_channel, is_high)
-            if trigger_channel == i and is_high then
+        -- 2: channel trigger event requests cv value from kria
+        observer:add_listener("channel", "trigger", function(event)
+            if event.channel == i and event.value == true then
                 devices.kria.get("cv", i)
             end
         end)
-        observer:add_listener("channel", "note", function(note_channel, note)
-            if note_channel == i then
-                local player = params:lookup_param("channel_" .. channel.id .. "_output"):get_player()
-                player:play_note(note, 0.5, 0.2)
+        -- 3: kria returns cv value and fires channel note event
+        observer:add_listener("kria", "cv", function(event)
+            if event.channel == i then
+                local note = volts_to_note(event.value)
+                channel:note_event(note)
             end
         end)
     end
@@ -74,9 +72,9 @@ function init()
             clock.sync(4)
         end
     end)
-    observer:add_listener("channel", "note", function(note_channel, note)
-        if note_channel == 1 then
-            channels[3]:note_event(note)
+    observer:add_listener("channel", "note", function(event)
+        if event.channel == 1 then
+            channels[3]:note_event(event.value)
         end
     end)
 

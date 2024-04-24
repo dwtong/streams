@@ -2,7 +2,7 @@ local scale = include("lib/scale")
 
 local Channel = {}
 
-local quantise_modes = { "none", "scale index", "nearest" }
+local quantise_modes = { "none", "nearest", "octave", "index" }
 
 function Channel:new(id, observer)
     local o = {}
@@ -10,46 +10,29 @@ function Channel:new(id, observer)
     self.__index = self
     o.id = id
     o.observer = observer
-    o.trigger_fn = function() end
-    o.note_fn = function() end
     return o
 end
 
-function Channel:on_trigger(trigger_fn)
-    self.trigger_fn = trigger_fn
-end
-
-function Channel:on_note(note_fn)
-    self.note_fn = note_fn
-end
-
 function Channel:trigger_event(is_high)
-    local source = "channel_" .. self.id
-    self.trigger_fn(is_high)
-    self.observer:notify(source, "trigger", is_high)
-    -- if is_high then
-    -- self.trigger_ready = true
-    -- self:play_note()
-    -- end
+    self.observer:notify("channel", "trigger", { channel = self.id, value = is_high })
+    if is_high then
+        self.trigger_ready = true
+        self:play_note()
+    end
 end
 
-function Channel:note_event(raw_note)
-    local source = "channel_" .. self.id
-    local quant_note = self:quantise_note(raw_note)
-    local note_changed = quant_note ~= self.next_note
-    self.next_note = quant_note
-    self.note_fn(quant_note)
-    -- self.note_ready = true
-    -- self:play_note()
+function Channel:note_event(unquantised_note)
+    local note = self:quantise_note(unquantised_note)
+    self.next_note = note
+    self.note_ready = true
+    self:play_note()
 
-    if note_changed then
-        self.observer:notify(source, "note", quant_note)
-    end
+    self.observer:notify("channel", "note", { channel = self.id, value = note })
 end
 
 function Channel:init_params(nb)
     params:add_separator("channel " .. self.id)
-    params:add_option("channel_" .. self.id .. "_quantise_mode", "quantise mode", quantise_modes, 1)
+    params:add_option("channel_" .. self.id .. "_quantise_mode", "quantise mode", quantise_modes, 4)
     params:add_number("channel_" .. self.id .. "_root_offset", "root offset", -11, 11, 0)
     params:add_number("channel_" .. self.id .. "_note_offset", "note offset", 0, 11, 0)
     params:add_number("channel_" .. self.id .. "_octave_offset", "octave offset", -3, 4, 0)
@@ -63,16 +46,17 @@ function Channel:get_param(param_name)
     return params:get(param_id)
 end
 
--- function Channel:play_note()
---     if self.note_ready and self.trigger_ready then
---         self.note_ready = false
---         self.trigger_ready = false
---         self.note = self.next_note
---         local player = params:lookup_param("channel_" .. self.id .. "_output"):get_player()
---         -- TODO: velocity and duration params
---         player:play_note(self.note, 0.5, 0.2)
---     end
--- end
+function Channel:play_note()
+    if not self.note_ready or not self.trigger_ready then
+        return
+    end
+    self.note_ready = false
+    self.trigger_ready = false
+    self.note = self.next_note
+    local player = params:lookup_param("channel_" .. self.id .. "_output"):get_player()
+    -- TODO: velocity and duration params
+    player:play_note(self.note, 0.5, 0.2)
+end
 
 function Channel:quantise_note(note)
     local quantise_mode = quantise_modes[self:get_param("quantise_mode")]
@@ -80,13 +64,14 @@ function Channel:quantise_note(note)
     local clamped_note = note % 12
 
     if quantise_mode == "none" then
-        -- TODO: should unquantised notes follow octaves?
-        -- perhaps two different quantise modes?
-        return clamped_note + octave_offset * 12
+        return note
     elseif quantise_mode == "nearest" then
         -- TODO: nearest mode not implemented
+        -- see `musicutil.snap_note_to_array`
         return note
-    elseif quantise_mode == "scale index" then
+    elseif quantise_mode == "octave" then
+        return clamped_note + octave_offset
+    elseif quantise_mode == "index" then
         local note_offset = self:get_param("note_offset")
         local carved_scale = self:get_carved_scale()
         local note_index = clamped_note + 1 + note_offset
