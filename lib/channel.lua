@@ -17,7 +17,13 @@ function Channel:trigger_event(is_high)
     self.observer:notify("channel", "trigger", { channel = self.id, value = is_high })
     if is_high then
         self.trigger_ready = true
+        self.trigger_high = true
         self:play_note()
+    else
+        clock.run(function()
+            clock.sleep(0.1)
+            self.trigger_high = false
+        end)
     end
 end
 

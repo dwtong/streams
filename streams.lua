@@ -37,6 +37,9 @@ function init()
     observer:add_listener("channel", "note", function()
         is_screen_dirty = true
     end)
+    observer:add_listener("channel", "trigger", function()
+        is_screen_dirty = true
+    end)
 
     -- channels 1 & 2:
     -- trigger device: crow in 1 & 2
@@ -69,6 +72,10 @@ function init()
     clock.run(function()
         while true do
             channels[3]:trigger_event(true)
+            clock.run(function()
+                clock.sleep(0.1)
+                channels[3]:trigger_event(false)
+            end)
             clock.sync(4)
         end
     end)
@@ -88,6 +95,16 @@ function init()
             clock.sleep(1 / 30)
         end
     end)
+
+    -- TESTING: hard coded presets
+    clock.run(function()
+        clock.sleep(1)
+        params:set("channel_1_quantise_mode", 4) -- index
+        params:set("channel_1_output", 10) -- jf poly
+        params:set("nb_jf_poly_alloc_mode", 2) -- rotate
+        params:set("channel_2_quantise_mode", 4) -- index
+        params:bang()
+    end)
 end
 
 function redraw()
@@ -103,12 +120,17 @@ function redraw()
         screen.text(note)
         if channel.note then
             local offset = screen.text_extents(note) + 2
-            screen.font_size(10)
             screen.move(x + offset, y)
+            screen.font_size(10)
             screen.text(channel:get_octave())
+            screen.move(x - 15, y)
             screen.font_size(8)
-            screen.move(x - 15, y - 3)
             screen.text(channel.note)
+        end
+        if channel.trigger_high then
+            screen.move(x - 15, y - 10)
+            screen.font_size(15)
+            screen.text(".")
         end
     end
     screen.update()
