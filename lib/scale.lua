@@ -37,6 +37,14 @@ function Scale.circle_of_fifths_names()
     return notes
 end
 
+function Scale.chromatic_names()
+    local notes = {}
+    for i = 0, 11 do
+        notes[i + 1] = musicutil.note_num_to_name(i)
+    end
+    return notes
+end
+
 function Scale.length(scale_type)
     local scale_notes = musicutil.generate_scale(1, scale_type, 1)
     return #scale_notes - 1

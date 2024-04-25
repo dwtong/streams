@@ -155,9 +155,23 @@ function note_to_volts(note)
 end
 
 function init_global_params()
+    local root_order_options = { "circle of fifths", "chromatic" }
     params:add_separator("global")
     params:add_option("global_root", "root note", scale.circle_of_fifths_names(), 1)
+    params:add_option("global_root_order", "root order", root_order_options, 1)
     params:add_option("global_scale_type", "scale", scale.scale_names(), 11)
+
+    params:set_action("global_root_order", function(option_index)
+        local param = params:lookup_param("global_root")
+        local root_order_option = root_order_options[option_index]
+        if root_order_option == "chromatic" then
+            param.options = scale.chromatic_names()
+        else
+            param.options = scale.circle_of_fifths_names()
+        end
+        param.selected = 1
+        _menu.rebuild_params()
+    end)
     params:set_action("global_scale_type", function(scale_type)
         local carve_max = scale.length(scale_type) - 1
         for i = 1, #channels do
