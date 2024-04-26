@@ -39,7 +39,8 @@ end
 function Channel:init_params()
     local scale_type = params:get("global_scale_type")
     local carve_max = scale.length(scale_type) - 1
-    params:add_group("channel " .. self.id, 8)
+
+    params:add_group("channel " .. self.id, 9)
     params:add_option("channel_" .. self.id .. "_quantise_mode", "quantise mode", QUANTISE_MODES, 1)
     params:add_number("channel_" .. self.id .. "_root_offset", "root offset", -11, 11, 0)
     params:add_number("channel_" .. self.id .. "_note_offset", "note offset", 0, 11, 0)
@@ -48,6 +49,7 @@ function Channel:init_params()
     params:add_number("channel_" .. self.id .. "_chance", "chance", 0, 100, 100)
     params:add_number("channel_" .. self.id .. "_velocity_min", "velocity min", 0, 10, 2)
     params:add_number("channel_" .. self.id .. "_velocity_range", "velocity range", 0, 10, 2)
+    params:add_binary("channel_" .. self.id .. "_mute", "mute", "toggle", 0)
 end
 
 function Channel:get_param(param_name)
@@ -59,16 +61,18 @@ function Channel:play_note()
     if not self.note_ready or not self.trigger_ready then
         return
     end
+
     local chance = self:get_param("chance")
     local player = params:lookup_param("channel_" .. self.id .. "_output"):get_player()
     local velocity_min = self:get_param("velocity_min")
     local velocity_range = self:get_param("velocity_range")
     local velocity_offset = velocity_range > 0 and math.random(velocity_range) or 0
     local velocity = util.clamp(velocity_min + velocity_offset, 0, 10) / 10
+
     self.note_ready = false
     self.trigger_ready = false
     self.note = self.next_note
-    if chance >= math.random(100) then
+    if not self:muted() and chance >= math.random(100) then
         player:play_note(self.note, velocity, 0.2)
     end
 end
@@ -115,6 +119,10 @@ end
 
 function Channel:get_octave()
     return self:get_param("octave_offset") + DEFAULT_OCTAVE_OFFSET
+end
+
+function Channel:muted()
+    return self:get_param("mute") == 1
 end
 
 return Channel

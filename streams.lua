@@ -128,12 +128,16 @@ end
 
 function redraw()
     screen.clear()
-    screen.level(15)
     for i = 1, #channels do
         local channel = channels[i]
         local x = (i == 1 or i == 3) and 20 or 84
         local y = (i == 1 or i == 2) and 20 or 52
         local note = channel.note and musicutil.note_num_to_name(channel.note) or "x"
+        if channel:muted() then
+            screen.level(1)
+        else
+            screen.level(15)
+        end
         screen.font_size(18)
         screen.move(x, y)
         screen.text(note)
