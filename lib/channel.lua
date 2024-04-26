@@ -36,10 +36,10 @@ function Channel:note_event(unquantised_note)
     self.observer:notify("channel", "note", { channel = self.id, value = note })
 end
 
-function Channel:init_params(nb)
+function Channel:init_params()
     local scale_type = params:get("global_scale_type")
     local carve_max = scale.length(scale_type) - 1
-    params:add_separator("channel " .. self.id)
+    params:add_group("channel " .. self.id, 8)
     params:add_option("channel_" .. self.id .. "_quantise_mode", "quantise mode", QUANTISE_MODES, 1)
     params:add_number("channel_" .. self.id .. "_root_offset", "root offset", -11, 11, 0)
     params:add_number("channel_" .. self.id .. "_note_offset", "note offset", 0, 11, 0)
@@ -48,7 +48,6 @@ function Channel:init_params(nb)
     params:add_number("channel_" .. self.id .. "_chance", "chance", 0, 100, 100)
     params:add_number("channel_" .. self.id .. "_velocity_min", "velocity min", 0, 10, 2)
     params:add_number("channel_" .. self.id .. "_velocity_range", "velocity range", 0, 10, 2)
-    nb:add_param("channel_" .. self.id .. "_output", "output")
 end
 
 function Channel:get_param(param_name)

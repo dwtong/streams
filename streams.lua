@@ -1,6 +1,7 @@
 -- streams
 
 DEFAULT_OCTAVE_OFFSET = 4 -- middle C
+CHANNEL_COUNT = 4
 AUTOSAVE = true
 
 local musicutil = require("musicutil")
@@ -35,13 +36,17 @@ function init()
     nb:init()
     init_global_params()
 
-    for i = 1, 4 do
+    params:add_separator("transformations")
+    for i = 1, CHANNEL_COUNT do
         local channel = Channel:new(i, observer)
-        channel:init_params(nb)
+        channel:init_params()
         table.insert(channels, channel)
     end
 
     params:add_separator("outputs")
+    for i = 1, #channels do
+        nb:add_param("channel_" .. i .. "_output", "channel " .. i)
+    end
     nb:add_player_params()
 
     observer:add_listener("channel", "note", function()
