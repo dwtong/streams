@@ -1,6 +1,7 @@
 -- streams
 
 DEFAULT_OCTAVE_OFFSET = 4 -- middle C
+AUTOSAVE = true
 
 local musicutil = require("musicutil")
 
@@ -18,6 +19,12 @@ local devices = {
 channels = {}
 local is_screen_dirty = false
 
+function cleanup()
+    if AUTOSAVE then
+        params:write()
+    end
+end
+
 function init()
     local observer = Observer:new()
     for device_name, device in pairs(devices) do
@@ -33,6 +40,9 @@ function init()
         channel:init_params(nb)
         table.insert(channels, channel)
     end
+
+    params:add_separator("outputs")
+    nb:add_player_params()
 
     observer:add_listener("channel", "note", function()
         is_screen_dirty = true
@@ -85,8 +95,6 @@ function init()
         end
     end)
 
-    nb:add_player_params()
-
     clock.run(function()
         while true do
             if is_screen_dirty then
@@ -96,15 +104,9 @@ function init()
         end
     end)
 
-    -- TESTING: hard coded presets
-    clock.run(function()
-        clock.sleep(1)
-        params:set("channel_1_quantise_mode", 4) -- index
-        params:set("channel_1_output", 10) -- jf poly
-        params:set("nb_jf_poly_alloc_mode", 2) -- rotate
-        params:set("channel_2_quantise_mode", 4) -- index
-        params:bang()
-    end)
+    if AUTOSAVE then
+        params:default()
+    end
 end
 
 function redraw()

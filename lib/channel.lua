@@ -2,7 +2,7 @@ local scale = include("lib/scale")
 
 local Channel = {}
 
-local quantise_modes = { "none", "nearest", "octave", "index" }
+local QUANTISE_MODES = { "none", "nearest", "octave", "index" }
 
 function Channel:new(id, observer)
     local o = {}
@@ -40,7 +40,7 @@ function Channel:init_params(nb)
     local scale_type = params:get("global_scale_type")
     local carve_max = scale.length(scale_type) - 1
     params:add_separator("channel " .. self.id)
-    params:add_option("channel_" .. self.id .. "_quantise_mode", "quantise mode", quantise_modes, 1)
+    params:add_option("channel_" .. self.id .. "_quantise_mode", "quantise mode", QUANTISE_MODES, 1)
     params:add_number("channel_" .. self.id .. "_root_offset", "root offset", -11, 11, 0)
     params:add_number("channel_" .. self.id .. "_note_offset", "note offset", 0, 11, 0)
     params:add_number("channel_" .. self.id .. "_octave_offset", "octave offset", -3, 4, 0)
@@ -75,7 +75,7 @@ function Channel:play_note()
 end
 
 function Channel:quantise_note(note)
-    local quantise_mode = quantise_modes[self:get_param("quantise_mode")]
+    local quantise_mode = QUANTISE_MODES[self:get_param("quantise_mode")]
     local octave_offset = self:get_octave()
     local clamped_note = note % 12
 
