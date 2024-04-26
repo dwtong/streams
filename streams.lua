@@ -78,20 +78,32 @@ function init()
         end)
     end
 
-    -- channel 3 samples channel 1 every fourth beat
+    -- channel 3 follows channel 2
+    observer:add_listener("channel", "trigger", function(event)
+        if event.channel == 2 then
+            channels[3]:trigger_event(event.value)
+        end
+    end)
+    observer:add_listener("channel", "note", function(event)
+        if event.channel == 2 then
+            channels[3]:note_event(event.value)
+        end
+    end)
+
+    -- channel 4 samples channel 1 every fourth beat
     clock.run(function()
         while true do
-            channels[3]:trigger_event(true)
+            channels[4]:trigger_event(true)
             clock.run(function()
                 clock.sleep(0.1)
-                channels[3]:trigger_event(false)
+                channels[4]:trigger_event(false)
             end)
             clock.sync(4)
         end
     end)
     observer:add_listener("channel", "note", function(event)
         if event.channel == 1 then
-            channels[3]:note_event(event.value)
+            channels[4]:note_event(event.value)
         end
     end)
 
@@ -124,6 +136,7 @@ function redraw()
             local offset = screen.text_extents(note) + 2
             screen.move(x + offset, y)
             screen.font_size(10)
+            -- FIXME: this does not include the "note" octave
             screen.text(channel:get_octave())
             screen.move(x - 15, y)
             screen.font_size(8)
