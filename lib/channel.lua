@@ -65,7 +65,7 @@ function Channel:play_note()
     local chance = self:get_param("chance")
     local player = params:lookup_param("channel_" .. self.id .. "_output"):get_player()
     local velocity_min = self:get_param("velocity_min")
-    local velocity_range = self:get_param("velocity_range")
+    local velocity_range = math.floor(self:get_param("velocity_range"))
     local velocity_offset = velocity_range > 0 and math.random(velocity_range) or 0
     local velocity = util.clamp(velocity_min + velocity_offset, 0, 10) / 10
 
