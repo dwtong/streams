@@ -70,7 +70,7 @@ function init()
     end
 
     -- init patch from patches directory
-    include("patches/kria")(observer, channels)
+    include("lib/patches/kria")(observer, channels)
 end
 
 function redraw()
