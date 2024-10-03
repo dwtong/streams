@@ -89,7 +89,7 @@ function Channel:quantise_note(note)
         -- see `musicutil.snap_note_to_array`
         return note
     elseif quantise_mode == "octave" then
-        return clamped_note + octave_offset
+        return clamped_note + octave_offset * 12
     elseif quantise_mode == "index" then
         local note_offset = self:get_param("note_offset")
         local carved_scale = self:get_carved_scale()
